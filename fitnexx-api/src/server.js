@@ -6,66 +6,30 @@ const morgan = require("morgan");
 const { connectMongo } = require("./config/mongo");
 
 const app = express();
-
-// Security & basics
 app.use(helmet());
+app.use(morgan("dev"));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json());
 
-// CORS (Android/Render safe)
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "*",
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: false,
-  })
-);
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-
-// Health checks (Render pings these)
-app.get("/", (_, res) => res.status(200).send("Fitnexx API OK"));
+// health + root (so Render health check never 502s)
+app.get("/", (_, res) => res.send("Fitnexx API OK"));
 app.get("/healthz", (_, res) => res.status(200).json({ ok: true }));
 
-// Routes
+// routes
 app.use("/auth", require("./routes/auth"));
 app.use("/users", require("./routes/users"));
 // after other routes
 app.use("/steps", require("./routes/steps"));
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found", path: req.originalUrl });
-});
-
-// Error handler
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-  res.status(err.status || 500).json({ error: err.message || "Server error" });
-});
-
+// start HTTP server immediately (don’t block on DB)
 const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`🚀 API listening on :${PORT}`));
 
-(async () => {
-  try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error("Missing MONGODB_URI");
-    }
-    await connectMongo(process.env.MONGODB_URI);
+// connect to Mongo in background
+connectMongo(process.env.MONGODB_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((e) => console.error("❌ Mongo connect error:", e.message));
 
-    app.listen(PORT, () => {
-      console.log(`🚀 API listening on :${PORT}`);
-    });
-  } catch (e) {
-    console.error("Fatal startup error:", e);
-    process.exit(1);
-  }
-})();
-
-// Keep process alive visibility
-process.on("unhandledRejection", (r) => console.error("UnhandledRejection:", r));
-process.on("uncaughtException", (e) => {
-  console.error("UncaughtException:", e);
-  // decide if you want to exit(1); for now, log only
-});
-    
+// helpful diagnostics (won’t crash the process silently)
+process.on("unhandledRejection", (r) => console.error("UNHANDLED REJECTION:", r));
+process.on("uncaughtException", (e) => console.error("UNCAUGHT EXCEPTION:", e));
