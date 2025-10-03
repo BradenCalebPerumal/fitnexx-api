@@ -1,37 +1,31 @@
 // src/config/firebase.js
 const admin = require("firebase-admin");
 
-let cred = null;
+try {
+  if (!admin.apps.length) {
+    let credential;
 
-// Preferred for Render: paste full JSON into one env var
-if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  cred = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-}
-// Alternative: 3 separate env vars
-else if (
-  process.env.FIREBASE_PROJECT_ID &&
-  process.env.FIREBASE_CLIENT_EMAIL &&
-  process.env.FIREBASE_PRIVATE_KEY
-) {
-  cred = {
-    project_id: process.env.FIREBASE_PROJECT_ID,
-    client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-  };
-}
-// Local dev fallback (keep your file for running on your laptop)
-else {
-  try {
-    // eslint-disable-next-line import/no-dynamic-require, global-require
-    cred = require("../../serviceAccountKey.json");
-    console.warn("[firebase] Using local serviceAccountKey.json");
-  } catch {
-    console.warn("[firebase] No Firebase Admin credentials provided.");
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      // Paste the **entire** service account JSON into this env var
+      const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+      credential = admin.credential.cert(sa);
+    } else if (process.env.FIREBASE_PROJECT_ID) {
+      // Or provide individual fields
+      credential = admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+      });
+    } else {
+      // Fallback if you ever run on GCP with default creds
+      credential = admin.credential.applicationDefault();
+    }
+
+    admin.initializeApp({ credential });
+    console.log("✅ Firebase Admin initialized");
   }
-}
-
-if (!admin.apps.length && cred) {
-  admin.initializeApp({ credential: admin.credential.cert(cred) });
+} catch (e) {
+  console.error("❌ Firebase Admin init failed:", e.message);
 }
 
 module.exports = admin;
