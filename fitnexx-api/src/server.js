@@ -29,6 +29,8 @@ app.get("/healthz", (_, res) => res.status(200).json({ ok: true }));
 // Routes
 app.use("/auth", require("./routes/auth"));
 app.use("/users", require("./routes/users"));
+// after other routes
+app.use("/steps", require("./routes/steps"));
 
 // 404 handler
 app.use((req, res) => {
