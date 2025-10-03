@@ -2,36 +2,13 @@ const router = require("express").Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../models/User");
 
-// GET /users/status  -> { profileCompleted: boolean }
+// GET /users/status
 router.get("/status", requireAuth, async (req, res) => {
-  const user = await User.findOne({ uid: req.user.uid }).lean();
+  const user = await User.findOne({ uid: req.user.uid });
   res.json({ profileCompleted: !!(user && user.profileCompleted) });
 });
 
-// NEW: GET /users/profile  -> return the stored profile
-router.get("/profile", requireAuth, async (req, res) => {
-  const user = await User.findOne({ uid: req.user.uid }).lean();
-  if (!user) return res.status(404).json({ error: "not_found" });
-  // Return only what the app needs
-  const {
-    gender,
-    age,
-    heightValue, heightUnit,
-    weightValue, weightUnit,
-    goal,
-    targetSteps,
-    profileCompleted
-  } = user || {};
-  res.json({
-    gender, age,
-    heightValue, heightUnit,
-    weightValue, weightUnit,
-    goal, targetSteps,
-    profileCompleted: !!profileCompleted
-  });
-});
-
-// POST /users/profile (unchanged)
+// POST /users/profile
 router.post("/profile", requireAuth, async (req, res) => {
   const {
     gender,
