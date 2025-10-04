@@ -15,6 +15,7 @@ const UserSchema = new Schema(
     weightUnit: { type: String, default: "kg" },
     goal: { type: String, enum: ["lose_weight", "build_muscle", "maintain"], default: "maintain" },
     targetSteps: { type: Number, default: 10000 },
+    targetCalories: { type: Number, default: 500 }, // daily burn goal (kcal)
 
     profileCompleted: { type: Boolean, default: false },
   },

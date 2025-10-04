@@ -35,6 +35,8 @@ router.post("/profile", requireAuth, async (req, res) => {
     weightValue, weightUnit,
     goal,
     targetSteps,
+    targetCalories, // daily burn goal (kcal)
+
   } = req.body;
 
   const updated = await User.findOneAndUpdate(
@@ -45,13 +47,31 @@ router.post("/profile", requireAuth, async (req, res) => {
         heightValue, heightUnit,
         weightValue, weightUnit,
         goal, targetSteps,
+        targetCalories,
         profileCompleted: true,
+        
       },
     },
     { upsert: true, new: true }
   );
 
   res.json({ ok: true, profileCompleted: updated.profileCompleted });
+});
+// GET /users/me
+router.get("/me", requireAuth, async (req, res) => {
+  const user = await User.findOne({ uid: req.user.uid });
+  if (!user) return res.json(null);
+  res.json({
+    uid: user.uid,
+    gender: user.gender,
+    age: user.age,
+    heightValue: user.heightValue,
+    heightUnit: user.heightUnit,
+    weightValue: user.weightValue,
+    weightUnit: user.weightUnit,
+    targetSteps: user.targetSteps,
+    targetCalories: user.targetCalories ?? 500,
+  });
 });
 
 module.exports = router;

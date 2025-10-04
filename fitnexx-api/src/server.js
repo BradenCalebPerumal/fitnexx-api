@@ -21,6 +21,7 @@ app.use("/users", require("./routes/users"));
 // after other routes
 app.use("/steps", require("./routes/steps"));
 app.use("/water", require("./routes/water"));
+app.use("/metrics", require("./routes/metrics"));
 
 // start HTTP server immediately (don’t block on DB)
 const PORT = process.env.PORT || 4000;
