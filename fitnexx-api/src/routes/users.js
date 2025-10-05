@@ -68,6 +68,7 @@ router.get("/me", requireAuth, async (req, res) => {
     heightValue: user.heightValue,
     heightUnit: user.heightUnit,
     weightValue: user.weightValue,
+    goal:user.goal,
     weightUnit: user.weightUnit,
     targetSteps: user.targetSteps,
     targetCalories: user.targetCalories ?? 500,
