@@ -21,7 +21,6 @@ function caloriesFrom(steps, weightKg) {
   const w = weightKg || 70;
   return steps * w * 0.0005;
 }
-
 // POST /steps/update {dateKey, steps}
 router.post("/update", requireAuth, async (req, res) => {
   try {
@@ -39,9 +38,11 @@ router.post("/update", requireAuth, async (req, res) => {
     const weightKg = kgFrom(u?.weightValue, u?.weightUnit || "kg");
     const strideM = strideMeters(heightM, u?.gender);
 
-    // Check existing doc to keep MAX steps that day
+    // Keep the MAX steps for the day
     const existing = await StepsDaily.findOne({ uid, dateKey }).lean();
-    const newSteps = Math.max(steps, existing?.steps || 0);
+    const prevSteps = existing?.steps || 0;             // <-- define this
+    const newSteps = Math.max(steps, prevSteps);
+
     const distanceKm = (newSteps * strideM) / 1000; // km
     const calories = caloriesFrom(newSteps, weightKg);
 
@@ -56,14 +57,14 @@ router.post("/update", requireAuth, async (req, res) => {
         }
       },
       { upsert: true, new: true }
-      
     );
+
+    // Gamification: award once when the goal is first reached today
     const goal = u?.targetSteps || 10000;
     if (prevSteps < goal && doc.steps >= goal) {
       try {
         await awardStepsGoal(uid, dateKey);
       } catch (e) {
-        // don’t fail the main request if awards throw
         console.error("awardStepsGoal error:", e);
       }
     }
@@ -81,6 +82,7 @@ router.post("/update", requireAuth, async (req, res) => {
     return res.status(500).json({ error: "server_error" });
   }
 });
+
 
 // (Optional) GET /steps/range?from=YYYY-MM-DD&to=YYYY-MM-DD
 router.get("/range", requireAuth, async (req, res) => {
