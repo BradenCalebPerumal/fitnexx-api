@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const requireAuth = require("../middleware/requireAuth");
 const WaterDaily = require("../models/WaterDaily");
-const { awardStepsGoal } = require("../services/awards");
+const { awardWater } = require("../services/awards"); // <-- import the correct function
+
 // POST /water/update  { dateKey: "YYYY-MM-DD", ml: number }
 // Server keeps the MAX ml for the day to be idempotent (like steps).
 router.post("/update", requireAuth, async (req, res) => {
@@ -13,13 +14,23 @@ router.post("/update", requireAuth, async (req, res) => {
 
     const uid = req.user.uid;
 
+    // read previous value so awards/streaks can decide transitions
+    const existing = await WaterDaily.findOne({ uid, dateKey }).lean();
+    const before = existing?.ml ?? 0;
+
+    // upsert with max so the day’s value is monotonic
     const doc = await WaterDaily.findOneAndUpdate(
       { uid, dateKey },
       { $max: { ml }, $setOnInsert: { uid, dateKey } },
       { upsert: true, new: true }
-    );    
-    await awardWater(uid, dateKey, before, doc.ml);
+    );
 
+    // award points / streaks (don’t let this fail the request)
+    try {
+      await awardWater(uid, dateKey, before, doc.ml);
+    } catch (e) {
+      console.error("awardWater error:", e);
+    }
 
     return res.json({ ok: true, uid, dateKey: doc.dateKey, ml: doc.ml });
   } catch (e) {
