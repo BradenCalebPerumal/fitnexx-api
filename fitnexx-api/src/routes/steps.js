@@ -2,7 +2,7 @@ const router = require("express").Router();
 const requireAuth = require("../middleware/requireAuth");
 const StepsDaily = require("../models/StepsDaily");
 const User = require("../models/User");
-
+const { awardStepsGoal } = require("../services/awards");
 // helpers
 function cmToMeters(v, unit) { return unit === "cm" ? (v || 0) / 100 : (v || 0); }
 function kgFrom(v, unit) {
@@ -56,7 +56,17 @@ router.post("/update", requireAuth, async (req, res) => {
         }
       },
       { upsert: true, new: true }
+      
     );
+    const goal = u?.targetSteps || 10000;
+    if (prevSteps < goal && doc.steps >= goal) {
+      try {
+        await awardStepsGoal(uid, dateKey);
+      } catch (e) {
+        // don’t fail the main request if awards throw
+        console.error("awardStepsGoal error:", e);
+      }
+    }
 
     return res.json({
       ok: true,

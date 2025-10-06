@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const requireAuth = require("../middleware/requireAuth");
 const WaterDaily = require("../models/WaterDaily");
-
+const { awardStepsGoal } = require("../services/awards");
 // POST /water/update  { dateKey: "YYYY-MM-DD", ml: number }
 // Server keeps the MAX ml for the day to be idempotent (like steps).
 router.post("/update", requireAuth, async (req, res) => {
@@ -17,7 +17,9 @@ router.post("/update", requireAuth, async (req, res) => {
       { uid, dateKey },
       { $max: { ml }, $setOnInsert: { uid, dateKey } },
       { upsert: true, new: true }
-    );
+    );    
+    await awardWater(uid, dateKey, before, doc.ml);
+
 
     return res.json({ ok: true, uid, dateKey: doc.dateKey, ml: doc.ml });
   } catch (e) {

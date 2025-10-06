@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const requireAuth = require("../middleware/requireAuth");
 const Workout = require("../models/WorkoutSession");
-
+const { awardStepsGoal } = require("../services/awards");
 // POST /workouts/start  { type?: "run" }
 router.post("/start", requireAuth, async (req, res) => {
   const uid = req.user.uid;
@@ -51,6 +51,7 @@ router.post("/finish", requireAuth, async (req, res) => {
   w.avgSpeedKmh = w.durationSec > 0 ? (w.distanceKm / (w.durationSec / 3600)) : 0;
 
   await w.save();
+  await awardWorkoutFinish(uid, String(w._id), dateKey, w.distanceKm || 0);
   res.json({
     ok: true,
     id: w._id,
