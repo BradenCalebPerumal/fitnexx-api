@@ -8,26 +8,31 @@ on:
   workflow_dispatch:
 
 jobs:
-  test_and_install:
+  test_and_build:
     runs-on: ubuntu-latest
 
+    # everything runs inside the fitnexx-api folder
     defaults:
       run:
         working-directory: fitnexx-api
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: fitnexx-api/package-lock.json
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          # lockfile is inside the nested folder
+          cache-dependency-path: fitnexx-api/package-lock.json
 
-    - name: Install Dependencies
-      run: npm ci
+      - name: Install Dependencies
+        run: npm ci
 
-    - name: Run Jest Unit Tests
-      run: npm test
+      - name: Build Project
+        run: npm run build
+
+      - name: Run Tests
+        run: npm test
