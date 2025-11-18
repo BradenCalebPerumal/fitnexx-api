@@ -35,6 +35,6 @@ jobs:
       # 'npm ci' ensures a clean installation based on package-lock.json
       run: npm ci 
       
-    # Step 4: Runs the unit tests defined in package.json
+    #Step 4: Runs the unit tests defined in package.json
     - name: Run Jest Unit Tests
       run: npm test
