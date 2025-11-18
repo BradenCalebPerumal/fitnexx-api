@@ -6,9 +6,11 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "test": "jest",
-    "build": "tsc"
+    "build": "echo \"Fitnexx API – JS project, no compile step required\""
   
   },
+
+
   "keywords": [],
   "author": "",
   "license": "ISC",
