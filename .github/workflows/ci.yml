@@ -30,13 +30,13 @@ jobs:
         node-version: '20.x' # Using a single, stable LTS version
         cache: 'npm' # Caches npm dependencies for faster builds
 
-    # Step 3: Installs the project dependencies
+      # Step 3: Installs the project dependencies
     - name: Install Dependencies
       # 'npm ci' ensures a clean installation based on package-lock.json
       run: npm ci 
-      working-directory: fitnexx-api # FIX: Tells the runner to look in the nested directory for package-lock.json
+      working-directory: fitnexx-api # FIX IS HERE
       
     #Step 4: Runs the unit tests defined in package.json
     - name: Run Jest Unit Tests
       run: npm test
-      working-directory: fitnexx-api # FIX: Tells the runner to run 'npm test' from the correct directory
+      working-directory: fitnexx-api # FIX IS HERE
