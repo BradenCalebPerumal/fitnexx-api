@@ -34,7 +34,9 @@ jobs:
     - name: Install Dependencies
       # 'npm ci' ensures a clean installation based on package-lock.json
       run: npm ci 
+      working-directory: fitnexx-api # FIX: Tells the runner to look in the nested directory for package-lock.json
       
     #Step 4: Runs the unit tests defined in package.json
     - name: Run Jest Unit Tests
       run: npm test
+      working-directory: fitnexx-api # FIX: Tells the runner to run 'npm test' from the correct directory
